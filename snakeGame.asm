@@ -1,0 +1,2 @@
+.DATA
+snakeX DB 100DUP
