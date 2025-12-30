@@ -3,16 +3,16 @@
 .STACK 100H 
 
 .DATA
-    char_TL   DB 0DAh
-    char_TR   DB 0BFh
-    char_BL   DB 0C0h
-    char_BR   DB 0D9h
-    char_H    DB 0C4h
-    char_V    DB 0B3h
+    char_TL DB 0DAh
+    char_TR DB 0BFh
+    char_BL DB 0C0h
+    char_BR DB 0D9h
+    char_H DB 0C4h
+    char_V DB 0B3h
     snakeX DB 100 DUP(?)
     snakeY DB 100 DUP(?)
     score DB 0
-    curr_dir DB ;
+    curr_dir DB 1 ;1-RIGHT, 2-UP, 3-RIGHT, 4-BOTTOM
     
 .CODE
 START: ;start here
@@ -187,7 +187,7 @@ INIT_SNAKE PROC
     MOV BL, 0FH
     INT 10H
     
-    RET
+    RET                                             
 INIT_SNAKE ENDP  
 
 CHECK_INPUT PROC
@@ -206,7 +206,11 @@ CHECK_INPUT PROC
     JMP MOVE_RIGHT
     
     MOVE_LEFT:
-        ;THE LOGIC FOR TURN LEFT
+        CMP cur_dir, 1 
+        JE NEXT
+        INC cur_dir
+        
+        NEXT:
         JMP NO_INPUT
      
     MOVE_RIGHT:
