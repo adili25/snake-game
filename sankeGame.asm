@@ -3,16 +3,17 @@
 .STACK 100H 
 
 .DATA
-    snakeX DB 100 DUP(?)
-    snakeY DB 100 DUP(?)
-    score DB 0
     char_TL   DB 0DAh
     char_TR   DB 0BFh
     char_BL   DB 0C0h
     char_BR   DB 0D9h
     char_H    DB 0C4h
     char_V    DB 0B3h
-
+    snakeX DB 100 DUP(?)
+    snakeY DB 100 DUP(?)
+    score DB 0
+    curr_dir DB ;
+    
 .CODE
 START: ;start here
     MOV AX,@DATA
@@ -23,10 +24,17 @@ START: ;start here
     
 CALL DRAW_CORNERS
 CALL DRAW_ROWS
-CALL DRAW_COLS
+CALL DRAW_COLS 
+CALL INIT_SNAKE
 
-MOV AH, 4CH ;exit
-INT 21H
+GAME_LOOP:
+    CALL CHECK_INPUT
+    CALL UPDATE_SNAKE
+    CALL COLLISON
+    CALL DRAW_SCREEN
+    
+    ;DELAY
+    JMP GAME_LOOP
           
 DRAW_CORNERS PROC 
     ; WE CAN REDUCE THE LINES OF THE PRINTING CORNERS BY USING
@@ -163,6 +171,67 @@ DRAW_COLS_LOOP:
     LOOP DRAW_COLS_LOOP
     
     RET
-DRAW_COLS ENDP   
+DRAW_COLS ENDP
+
+INIT_SNAKE PROC
+                      
+    MOV DH, 12
+    MOV DL, 39
+    MOV AH, 02H
+    MOV BH, 0   
+    INT 10H
+    
+    MOV AH, 09H
+    MOV AL, '@'
+    MOV CX, 1
+    MOV BL, 0FH
+    INT 10H
+    
+    RET
+INIT_SNAKE ENDP  
+
+CHECK_INPUT PROC
+    
+    MOV AH, 01H
+    INT 16H
+    
+    JZ NO_INPUT
+    
+    MOV AH, 00H ;IF THERE IS AN INPUT IT WILL BEEN SAVED IN AL
+    INT 16H
+    
+    CMP AL, "a"
+    JMP MOVE_LEFT
+    CMP AL, "s"
+    JMP MOVE_RIGHT
+    
+    MOVE_LEFT:
+        ;THE LOGIC FOR TURN LEFT
+        JMP NO_INPUT
+     
+    MOVE_RIGHT:
+        ;THE LOGIC FOR TURN RIGHT
+        JMP NO_INPUT
+    
+    NO_INPUT: ;THIS LABEL TO SKIP THE LOGIC
+        RET
+CHECK_INPUT ENDP
+
+UPDATE_SNAKE PROC
+    
+    
+    RET
+UPDATE_SNAKE ENDP
+
+COLLISON PROC
+
+
+    RET
+COLLISON ENDP
+
+DRAW_SCREEN PROC
+    
+    RET
+DRAW_SCREEN ENDP
 
 END START
