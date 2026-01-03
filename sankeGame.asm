@@ -9,8 +9,14 @@
     char_BR DB 0D9h
     char_H DB 0C4h
     char_V DB 0B3h
+    
     snakeX DB 100 DUP(?)
     snakeY DB 100 DUP(?)
+    snake_len DB 3
+    
+    foodX DB ?
+    foodY DB ?
+    
     score DB 0
     curr_dir DB 1 ;1-RIGHT, 2-UP, 3-RIGHT, 4-BOTTOM
     
@@ -190,7 +196,7 @@ INIT_SNAKE PROC
     RET                                             
 INIT_SNAKE ENDP  
 
-CHECK_INPUT PROC
+CHECK_INPUT PROC ;1-RIGHT, 2-TOP, 3-LEFT, 4-BOTTOM
     
     MOV AH, 01H
     INT 16H
@@ -206,15 +212,23 @@ CHECK_INPUT PROC
     JMP MOVE_RIGHT
     
     MOVE_LEFT:
-        CMP cur_dir, 1 
-        JE NEXT
-        INC cur_dir
+        CMP curr_dir, 1 
+        JE ITS_RIGHT
+        DEC curr_dir
+        JMP NO_INPUT
         
-        NEXT:
+        ITS_RIGHT:
+            MOV curr_dir, 4
         JMP NO_INPUT
      
     MOVE_RIGHT:
-        ;THE LOGIC FOR TURN RIGHT
+        CMP curr_dir, 4 
+        JE ITS_BOTTOM
+        INC curr_dir
+        JMP NO_INPUT
+        
+        ITS_BOTTOM:
+            MOV curr_dir, 1
         JMP NO_INPUT
     
     NO_INPUT: ;THIS LABEL TO SKIP THE LOGIC
@@ -222,16 +236,95 @@ CHECK_INPUT PROC
 CHECK_INPUT ENDP
 
 UPDATE_SNAKE PROC
+    MOV CL, snake_len
+    DEC CX
     
+    MOV SI, CX
     
-    RET
+    UPDATE_BODY_LOOP:
+        MOV AL, snakeX[SI-1]
+        MOV snakeX[SI], AL
+        
+        MOV AL, snakeY[SI-1]
+        MOV snakeY[SI], AL
+        
+        DEC SI
+        LOOP UPDATE_BODY_LOOP
+    
+    HEAD_DIRUCTION:
+    CMP curr_dir, 1
+    JE MOVE_RIGHT_UPDATE
+    CMP curr_dir, 2
+    JE MOVE_UP_UPDATE
+    CMP curr_dir, 3
+    JE MOVE_LEFT_UPDATE
+    CMP curr_dir, 4
+    JE MOVE_DOWN_UPDATE
+    JMP END_UPDATE
+
+    MOVE_RIGHT_UPDATE:
+    INC snakeX[0]       
+    JMP END_UPDATE
+
+    MOVE_UP_UPDATE:
+    DEC snakeY[0]       
+    JMP END_UPDATE
+
+    MOVE_LEFT_UPDATE:
+    DEC snakeX[0]       
+    JMP END_UPDATE
+
+    MOVE_DOWN_UPDATE:
+    INC snakeY[0]       
+    JMP END_UPDATE
+
+    END_UPDATE:
+    
+        RET
 UPDATE_SNAKE ENDP
 
-COLLISON PROC
+GENERATE_FOOD PROC
+    MOV AH, 2Ch ;RAND FUNCTION
+    INT 21h
+    
+    MOV AL, DL
+    MOV BL, 78
+    
+    CALC_X_LOOP: ;INSTADE OF THE DIV INISTRUCTION
+        CMP AL, BL
+        JL DONE_X
+        SUB AL, BL
+        JMP CALC_X_LOOP
+    
+    DONE_X:
+        INC AL
+        MOV foodX, AL
+    
+    MOV AH, 2Ch
+    INT 21h
+    
+    MOV AL, DL
+    ADD AL, DH
+    MOV BL, 23
+    
+    CALC_Y_LOOP:
+        CMP AL, BL
+        JL DONE_Y
+        SUB AL, BL
+        JMP CALC_Y_LOOP
+    
+    DONE_Y:
+        INC AL
+        MOV foodY, AL
+    
+    RET 
+GENERATE_FOOD ENDP
+
+COLLISION PROC
 
 
     RET
-COLLISON ENDP
+COLLISION ENDP
 
 DRAW_SCREEN PROC
     
